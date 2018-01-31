@@ -1,0 +1,60 @@
+cmake_minimum_required(VERSION 3.8)
+
+project(NasdXML)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+set(CMAKE_CXX_STANDARD 11)
+#set(CMAKE_CXX_FLAGS "-g -O0")
+set(SOURCE_FILES main.cpp NasdXML.cpp NasdXML.h HTTP.cpp)
+
+add_executable(NasdXML ${SOURCE_FILES})
+
+# for std::auto_ptr in cppnetlib
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+
+# libxml
+find_package(LibXml2)
+if (LIBXML2_FOUND)
+    include_directories(${LIBXML2_INCLUDE_DIR})
+    target_link_libraries(NasdXML ${LIBXML2_LIBRARIES})
+    message(STATUS "LibXml2_include_dir " ${LIBXML2_INCLUDE_DIR})
+endif (LIBXML2_FOUND)
+
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(NasdXML Threads::Threads)
+
+find_package(OpenSSL)
+if (OPENSSL_FOUND)
+    target_link_libraries(NasdXML ${OPENSSL_LIBRARIES})
+    foreach (lib ${OPENSSL_LIBRARIES})
+        message(STATUS "OpenSSL lib " ${lib})
+    endforeach (lib)
+endif ()
+set(BOOST_INCLUDEDIR "/usr/include")
+find_package(Boost 1.64 COMPONENTS date_time)
+if (Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+    target_link_libraries(NasdXML ${Boost_LIBRARIES})
+    #   message(STATUS "Boost Version " ${Boost_VERSION})
+endif ()
+add_definitions(-DBOOST_NETWORK_ENABLE_HTTPS)
+#find_package (cppnetlib REQUIRED)
+#include_directories(${CPPNETLIB_INCLUDE_DIRS})
+#foreach(dir ${CPPNETLIB_INCLUDE_DIRS})
+#    message(STATUS "cppnetlib_include_dirs " ${dir})
+#endforeach(dir)
+#target_link_libraries(NasdXML ${CPPNETLIB_LIBRARIES})
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ~/src/cpp-netlib-build)
+find_package(cppnetlib 0.11.0 REQUIRED)
+include_directories(${CPPNETLIB_INCLUDE_DIRS})
+target_link_libraries(NasdXML ${CPPNETLIB_LIBRARIES})
+
+find_package(CURL)
+if (CURL_FOUND)
+    include_directories(${CURL_INCLUDE_DIRS})
+    target_link_libraries(NasdXML ${CURL_LIBRARIES})
+    message(STATUS "curl include dirs  " ${CURL_INCLUDE_DIRS})
+    message(STATUS "curl libs  " ${CURL_LIBRARIES})
+endif (CURL_FOUND)
